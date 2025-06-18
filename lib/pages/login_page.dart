@@ -1,5 +1,8 @@
 import 'dart:ui';
 
+import 'package:chat_application/pages/create_account_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -13,7 +16,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
 
-      debugShowCheckedModeBanner: false,
+
 
       title: 'Flutter Login UI',
       theme: ThemeData(
@@ -36,6 +39,12 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+
+  loginMethod() async{
+    await FirebaseAuth.instance.signInWithEmailAndPassword(email: _emailController.text, password: _passwordController.text);
+  }
+
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -46,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black87
+      backgroundColor: Colors.white
       ,
       body: Stack(
         children: [
@@ -62,7 +71,7 @@ class _LoginPageState extends State<LoginPage> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
                 child: Container(
                   width: MediaQuery.of(context).size.width * 0.9,
                   padding: const EdgeInsets.all(24),
@@ -77,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         const Text(
-                          'Welcome to message now!',
+                          'Welcome to Koel',
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -88,12 +97,17 @@ class _LoginPageState extends State<LoginPage> {
                         TextFormField(
                           controller: _emailController,
                           decoration: const InputDecoration(
+
                             labelText: 'Email',
                             hintText: 'Enter your email',
+                            labelStyle: TextStyle(color: Colors.black),
                             border: OutlineInputBorder(
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.black), // Normal state
+                              borderSide: BorderSide(color: Colors.grey), // Normal state
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.grey), // Focused state
                             ),
                             fillColor: Colors.white,
                             filled: true,
@@ -112,7 +126,14 @@ class _LoginPageState extends State<LoginPage> {
                           decoration: const InputDecoration(
                             labelText: 'Password',
                             hintText: 'Enter your password',
+                            labelStyle: TextStyle(color: Colors.black),
                             border: OutlineInputBorder(),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.grey), // Normal state
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.grey), // Focused state
+                            ),
                             fillColor: Colors.white,
                             filled: true,
                           ),
@@ -126,26 +147,76 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 24),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(200, 50), // Width: 200, Height: 50
+                            minimumSize: const Size(200, 50),
+                            backgroundColor: Colors.lightBlue
+
                           ),
                           onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              String email = _emailController.text;
-                              String password = _passwordController.text;
-                              print('Email: $email, Password: $password');
-                            }
+                            // if (_formKey.currentState!.validate()) {
+                            //   String email = _emailController.text;
+                            //   String password = _passwordController.text;
+                            //   print('Email: $email, Password: $password');
+                            // }
+
+                            loginMethod();
                           },
-                          child: const Text('Login',style: TextStyle(color:Colors.black),),
+                          child: const Text('Login',style: TextStyle(color:Colors.white,fontWeight: FontWeight.bold ),),
                         ),
                         const SizedBox(height: 16),
                         TextButton(
-
                           onPressed: () {},
                           child: const Text(
                             'Forgot Password?',
-                            style: TextStyle(color: Colors.white,),
+                            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                           ),
                         ),
+                        const SizedBox(height: 16),
+
+// Divider with text in the middle
+                        Row(
+                          children: const <Widget>[
+                            Expanded(
+                              child: Divider(
+                                color: Colors.black,
+                                thickness: 1,
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text(
+                                "OR",
+                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              child: Divider(
+                                color: Colors.black,
+                                thickness: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        ElevatedButton(
+
+                          onPressed: () {
+                            
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=> CreateAccountPage()));
+                            
+                            
+                          },
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(200, 50),
+                            backgroundColor: Colors.cyan
+                          ),
+                          child: const Text(
+                            'Create New Account',
+                            style: TextStyle(fontSize: 17, color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+
                       ],
                     ),
                   ),

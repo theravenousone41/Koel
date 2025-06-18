@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "782290377365",
+    "project_id": "koel-2da29",
+    "storage_bucket": "koel-2da29.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782290377365:android:47301ed2070bc3218e999c",
+        "android_client_info": {
+          "package_name": "com.example.chat_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVclwdMMHnkl10Uhg86CBpNgUtbaCtTek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
