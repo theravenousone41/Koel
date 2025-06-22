@@ -1,10 +1,8 @@
 import 'dart:async';
-
-
+import 'package:chat_application/services/auth/auth_gate.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-
 
 class SplashScreenPage extends StatefulWidget {
   const SplashScreenPage({super.key});
@@ -14,8 +12,6 @@ class SplashScreenPage extends StatefulWidget {
 }
 
 class _SplashScreenPageState extends State<SplashScreenPage> {
-
-
   @override
   void initState() {
     // TODO: implement initState
@@ -23,34 +19,29 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
 
     Timer(Duration(seconds: 3), () {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacementNamed(context, '/controller');
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const AuthGate()));
       });
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Lottie.asset(
-            'assets/animations/logo_animation.json',height: 200,width: 200),
-
-
-
-            Text("Koel",style: TextStyle(fontFamily: "Cursive",color: Colors.white,fontSize: 25),)
-
-          ],
-        ),
-      )
-    
-    );
-      
-      
- 
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Lottie.asset('assets/animations/logo_animation.json',
+                  height: 200, width: 200),
+              Text(
+                "Koel",
+                style: TextStyle(
+                    fontFamily: "Cursive", color: Colors.white, fontSize: 25),
+              )
+            ],
+          ),
+        ));
   }
 }

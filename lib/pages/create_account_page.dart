@@ -1,5 +1,6 @@
 import 'dart:ui';
-
+import 'package:chat_application/pages/login_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -12,21 +13,32 @@ class CreateAccountPage extends StatefulWidget {
 
 class _CreateAccountPageState extends State<CreateAccountPage> {
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   DateTime? selectedDate;
   String? selectedGender;
 
+  bool _isLoading = false;
+
   @override
   void dispose() {
     _dobController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _selectDate(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(2025),
+      initialDate: DateTime(2000),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
@@ -38,12 +50,48 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     }
   }
 
-  Widget _buildTextField(String label,
+  void _register() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (selectedGender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your gender')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account created successfully')),
+        );
+        // Delay and then redirect to login page
+        await Future.delayed(const Duration(seconds: 2));
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => LoginPage()));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Registration failed: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller,
       {TextInputType keyboardType = TextInputType.text,
       bool obscureText = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: TextFormField(
+        controller: controller,
         keyboardType: keyboardType,
         obscureText: obscureText,
         decoration: InputDecoration(
@@ -104,19 +152,23 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                             ),
                           ),
                           const SizedBox(height: 20),
-
-                          // First Name + Last Name side by side
                           Row(
                             children: [
-                              Expanded(child: _buildTextField("First Name")),
+                              Expanded(
+                                  child: _buildTextField(
+                                      "First Name", _firstNameController)),
                               const SizedBox(width: 12),
-                              Expanded(child: _buildTextField("Last Name")),
+                              Expanded(
+                                  child: _buildTextField(
+                                      "Last Name", _lastNameController)),
                             ],
                           ),
-                          _buildTextField("Email",
+                          _buildTextField("Email", _emailController,
                               keyboardType: TextInputType.emailAddress),
-                          _buildTextField("Password", obscureText: true),
+                          _buildTextField("Password", _passwordController,
+                              obscureText: true),
 
+                          // Birthdate
                           TextFormField(
                             controller: _dobController,
                             readOnly: true,
@@ -139,8 +191,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                                 ? 'Please select your birthdate'
                                 : null,
                           ),
-
                           const SizedBox(height: 12),
+
                           Align(
                             alignment: Alignment.centerLeft,
                             child: Padding(
@@ -157,71 +209,44 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                             ),
                           ),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Radio<String>(
                                 value: 'Male',
                                 groupValue: selectedGender,
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedGender = value;
-                                  });
-                                },
+                                onChanged: (value) =>
+                                    setState(() => selectedGender = value),
                               ),
-                              const Text('Male',
-                                  style: TextStyle(color: Colors.black)),
+                              const Text('Male'),
                               const SizedBox(width: 20),
                               Radio<String>(
                                 value: 'Female',
                                 groupValue: selectedGender,
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedGender = value;
-                                  });
-                                },
+                                onChanged: (value) =>
+                                    setState(() => selectedGender = value),
                               ),
-                              const Text('Female',
-                                  style: TextStyle(color: Colors.black)),
+                              const Text('Female'),
                             ],
                           ),
-
                           const SizedBox(height: 24),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(200, 50),
-                              backgroundColor: Colors.lightBlue,
-                            ),
-                            onPressed: () {
-                              if (selectedGender == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content:
-                                          Text('Please select your gender')),
-                                );
-                                return;
-                              }
 
-                              if (_formKey.currentState!.validate()) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content:
-                                        Text('Account Created Successfully!'),
+                          _isLoading
+                              ? const CircularProgressIndicator()
+                              : ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    minimumSize: const Size(200, 50),
+                                    backgroundColor: Colors.lightBlue,
                                   ),
-                                );
-                                Navigator.pop(context);
-                              }
-                            },
-                            child: const Text(
-                              'Sign Up',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
+                                  onPressed: _register,
+                                  child: const Text(
+                                    'Sign Up',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
 
-// Divider with OR
+                          const SizedBox(height: 16),
                           Row(
                             children: const [
                               Expanded(
@@ -232,12 +257,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                               ),
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Text(
-                                  "OR",
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
+                                child: Text("OR"),
                               ),
                               Expanded(
                                 child: Divider(
@@ -247,45 +267,34 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                               ),
                             ],
                           ),
-
                           const SizedBox(height: 16),
 
+                          // Social Buttons (stubbed)
                           Row(
                             children: [
                               Expanded(
                                 child: ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(color: Colors.grey),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
-                                  ),
                                   onPressed: () {
-                                    // Handle Google Sign-Up
+                                    // Handle Google
                                   },
                                   icon: Image.asset(
                                     'assets/icon/google.png',
                                     height: 20,
                                     width: 20,
                                   ),
-                                  label: const Text("Google",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
+                                  label: const Text("Google"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.black,
+                                    side: const BorderSide(color: Colors.grey),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(
-                                        0xFF1877F2), // Facebook Blue
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
-                                  ),
                                   onPressed: () {
-                                    // Handle Facebook Sign-Up
+                                    // Handle Facebook
                                   },
                                   icon: Image.asset(
                                     'assets/icon/facebook.png',
@@ -293,31 +302,25 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                                     width: 20,
                                     color: Colors.white,
                                   ),
-                                  label: const Text("Facebook",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
+                                  label: const Text("Facebook"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF1877F2),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 16),
-// Already have an account? Sign In
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
-                                "Already have an account?",
-                                style: TextStyle(color: Colors.black),
-                              ),
+                              const Text("Already have an account?"),
                               TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context); // Goes back to login
-                                },
+                                onPressed: () => Navigator.pop(context),
                                 child: const Text(
                                   "Sign In",
                                   style: TextStyle(
                                     color: Colors.cyan,
-                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
