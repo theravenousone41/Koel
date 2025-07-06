@@ -1,17 +1,20 @@
 import 'dart:ui';
 import 'package:chat_application/pages/login_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
-class CreateAccountPage extends StatefulWidget {
-  const CreateAccountPage({Key? key}) : super(key: key);
+import '../Services/Firestore/firestore_service.dart';
+
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({Key? key}) : super(key: key);
 
   @override
   _CreateAccountPageState createState() => _CreateAccountPageState();
 }
 
-class _CreateAccountPageState extends State<CreateAccountPage> {
+class _CreateAccountPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _dobController = TextEditingController();
@@ -50,8 +53,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     }
   }
 
+
+
+
   void _register() async {
     if (!_formKey.currentState!.validate()) return;
+
     if (selectedGender == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select your gender')),
@@ -62,28 +69,64 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     setState(() => _isLoading = true);
 
     try {
+      // Step 1: Create user in Firebase Authentication
+      UserCredential userCredential =
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created successfully')),
+     User? user = userCredential.user;
+
+      // Step 2: Save user info to Firestore
+      if (user != null) {
+        await FirestoreService.saveUserProfile(
+          uid: user.uid,
+          firstName: _firstNameController.text,
+          lastName: _lastNameController.text,
+          email: _emailController.text,
+          dob: selectedDate,
+          gender: selectedGender!,
         );
-        // Delay and then redirect to login page
-        await Future.delayed(const Duration(seconds: 2));
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => LoginPage()));
+
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Account created successfully')),
+          );
+          await Future.delayed(const Duration(seconds: 2));
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => LoginPage()));
+        }
       }
+    } on FirebaseAuthException catch (e) {
+      String error = 'Registration failed';
+      if (e.code == 'email-already-in-use') {
+        error = 'This email is already registered.';
+      } else if (e.code == 'weak-password') {
+        error = 'Password should be at least 6 characters.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registration failed: ${e.toString()}')),
+        SnackBar(content: Text('Something went wrong: ${e.toString()}')),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
+
+
+
+
+
+
+
+
+
+
+
 
   Widget _buildTextField(String label, TextEditingController controller,
       {TextInputType keyboardType = TextInputType.text,

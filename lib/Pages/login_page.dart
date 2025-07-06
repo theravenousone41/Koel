@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:chat_application/pages/create_account_page.dart';
+import 'package:chat_application/pages/register_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -215,7 +215,7 @@ class _LoginPageState extends State<LoginPage> {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => CreateAccountPage()));
+                                    builder: (context) => RegisterPage()));
                           },
                           style: ElevatedButton.styleFrom(
                               minimumSize: const Size(200, 50),
